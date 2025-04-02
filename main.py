@@ -10,7 +10,7 @@ if __name__ == "__main__":
         if len(sys.argv) > 1:
             file_path = sys.argv[1]
         else:
-            file_path = "./PublicInstances/wlp01.dzn" 
+            file_path = "./PublicInstances/toy.dzn" 
             
         print(f"Parsing file: {file_path}")
         problem = parse_file(file_path)
@@ -90,13 +90,12 @@ if __name__ == "__main__":
                     write_output(f"Store {store_id + 1} → Not assigned")
             
             write_output("\nWarehouse usage:")
-            for wh_id, usage in enumerate(initial_solution.warehouse_usage):
-                capacity = problem.get_warehouses()[wh_id].capacity
-                if usage > 0:
-                    write_output(f"Warehouse {wh_id + 1}: {usage}/{capacity} ({usage/capacity*100:.1f}%)")
+            for wh in problem.get_warehouses():
+                if wh.current_usage > 0:
+                    write_output(f"Warehouse {wh.id + 1}: {wh.current_usage}/{wh.capacity} ({wh.current_usage/wh.capacity*100:.1f}%)")
             
             write_output("\nOpen warehouses:")
-            open_wh = [wh_id + 1 for wh_id, is_open in enumerate(initial_solution.warehouse_open) if is_open]
+            open_wh = [wh.id + 1 for wh in problem.get_warehouses() if wh.is_open]
             write_output(f"{open_wh}")
         
         print(f"\nOutput saved to: {output_file}")

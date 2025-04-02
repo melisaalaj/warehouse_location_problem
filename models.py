@@ -3,6 +3,19 @@ class Warehouse:
         self.id = id
         self.capacity = capacity
         self.fixed_cost = fixed_cost
+        self.is_open = False
+        self.current_usage = 0
+    
+    def open(self):
+        self.is_open = True
+    
+    def add_usage(self, quantity):
+        self.current_usage += quantity
+        if self.current_usage > 0:
+            self.is_open = True
+    
+    def get_remaining_capacity(self):
+        return self.capacity - self.current_usage
 
 class Store:
     def __init__(self, id, demand):

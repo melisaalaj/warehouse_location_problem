@@ -3,16 +3,11 @@ class Solution:
         self.problem = problem
         # Store assignments as a list of triples (store_id, warehouse_id, quantity)
         self.assignments = []
-        # For each warehouse, how much capacity is used
-        self.warehouse_usage = [0] * len(problem.get_warehouses())
-        # Whether each warehouse is open
-        self.warehouse_open = [False] * len(problem.get_warehouses())
         
     def add_assignment(self, store_id, warehouse_id, quantity):
         """Add an assignment of a store to a warehouse with a specific quantity"""
         self.assignments.append((store_id, warehouse_id, quantity))
-        self.warehouse_usage[warehouse_id] += quantity
-        self.warehouse_open[warehouse_id] = True
+        self.problem.get_warehouses()[warehouse_id].add_usage(quantity)
         
     def get_store_assignments(self):
         """Get a dictionary mapping store_id to list of (warehouse_id, quantity) tuples"""
@@ -33,9 +28,9 @@ class Solution:
             supply_cost += self.problem.get_supply_cost()[store_id][wh_id] * quantity
                 
         # Add fixed costs for open warehouses
-        for wh_id, is_open in enumerate(self.warehouse_open):
-            if is_open:
-                opening_cost += self.problem.get_warehouses()[wh_id].fixed_cost
+        for warehouse in self.problem.get_warehouses():
+            if warehouse.is_open:
+                opening_cost += warehouse.fixed_cost
         
         return supply_cost + opening_cost, supply_cost, opening_cost
     
