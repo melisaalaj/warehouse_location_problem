@@ -4,6 +4,7 @@ def validate_solution(problem, solution):
     1. The total quantity of goods taken from a warehouse cannot exceed its capacity
     2. The total quantity of goods brought to a store must be exactly equal to its request
     3. Goods can be moved only from open warehouses
+    4. Two incompatible stores cannot be supplied by the same warehouse
     
     Returns a tuple (is_valid, error_message)
     """
@@ -27,7 +28,20 @@ def validate_solution(problem, solution):
         if not warehouses[wh_id].is_open:
             return False, f"Goods are moved from closed warehouse {wh_id+1} to store {store_id+1}"
     
-    # NOTE: Incompatibility constraints are intentionally NOT checked in this version
-    # We're only focusing on capacity and demand constraints for now
+    # Check incompatibility constraints
+    # Group stores by warehouse
+    warehouse_stores = {}
+    for store_id, wh_id, _ in solution.assignments:
+        if wh_id not in warehouse_stores:
+            warehouse_stores[wh_id] = set()
+        warehouse_stores[wh_id].add(store_id)
     
-    return True, "Solution is valid (only checking capacity and demand constraints)"
+    # Check for incompatible stores assigned to the same warehouse
+    for wh_id, store_set in warehouse_stores.items():
+        for store_id in store_set:
+            store = stores[store_id]
+            for incomp_store_id in store.incompatible_stores:
+                if incomp_store_id in store_set:
+                    return False, f"Incompatible stores {store_id+1} and {incomp_store_id+1} are assigned to the same warehouse {wh_id+1}"
+    
+    return True, "Solution is valid"

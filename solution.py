@@ -19,7 +19,6 @@ class Solution:
         return store_assignments
     
     def get_total_cost(self):
-        """Calculate the total cost of the solution"""
         supply_cost = 0
         opening_cost = 0
         

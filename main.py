@@ -10,7 +10,7 @@ if __name__ == "__main__":
         if len(sys.argv) > 1:
             file_path = sys.argv[1]
         else:
-            file_path = "./PublicInstances/toy.dzn" 
+            file_path = "./PublicInstances/wlp04.dzn" 
             
         print(f"Parsing file: {file_path}")
         problem = parse_file(file_path)
