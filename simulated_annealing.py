@@ -1,13 +1,22 @@
 import math
 import random
 import time
-from initial_solution import generate_initial_solution
+from initial_solution import generate_initial_solution, generate_initial_solution_with_randomization
 from validator import validate_solution
 
-def simulated_annealing(problem, T_initial=500, T_min=5, alpha=0.9, inner_limit=30, max_iterations=50000):
+def simulated_annealing(problem, T_initial=500, T_min=5, alpha=0.9, inner_limit=30, max_iterations=50000, time_limit_minutes=15):
     start_time = time.time()
+    randomization = random.uniform(0.2, 0.4)
+    current_solution = generate_initial_solution_with_randomization(problem, randomization=randomization)
 
-    current_solution = generate_initial_solution(problem, ordering_operator="cost_efficiency")
+    is_valid, message = validate_solution(problem, current_solution)
+    if not is_valid:
+        print(f"Warning: Initial solution is invalid: {message}")
+        print("Attempting to fix initial solution...")
+        # If initial solution is invalid, try a different method
+        current_solution = generate_initial_solution(problem, ordering_operator="random")
+        is_valid, message = validate_solution(problem, current_solution)
+    
     best_solution = current_solution
     initial_cost, initial_supply_cost, initial_opening_cost = current_solution.get_total_cost()
     print(f"Initial solution cost: {initial_cost} = {initial_supply_cost} (supply cost) + {initial_opening_cost} (opening cost)")
@@ -18,13 +27,21 @@ def simulated_annealing(problem, T_initial=500, T_min=5, alpha=0.9, inner_limit=
     
     print(f"Starting simulated annealing with max iterations: {max_iterations}")
     print(f"Annealing parameters: T_initial={T_initial}, T_min={T_min}, alpha={alpha}, inner_limit={inner_limit}")
+    print(f"Time limit: {time_limit_minutes} minutes")
     print(f"Initial temperature: {T:.2f}")
 
     # Create a record of best solutions over time
     iteration_records = [(0, best_cost)]
+    last_record_iteration = 0
 
     # Continue until max iterations is reached (primary condition)
     while iteration < max_iterations:
+        current_time = time.time()
+        elapsed_minutes = (current_time - start_time) / 60
+        if elapsed_minutes >= time_limit_minutes:
+            print(f"Time limit of {time_limit_minutes} minutes reached after {iteration} iterations")
+            break
+            
         # Reset temperature if it gets too low to continue exploring
         if T <= T_min:
             print(f"Temperature reached minimum ({T_min}), resetting to {T_initial}")
@@ -37,6 +54,10 @@ def simulated_annealing(problem, T_initial=500, T_min=5, alpha=0.9, inner_limit=
             iteration += 1
             iter_at_this_temp += 1
             
+            if (time.time() - start_time) / 60 >= time_limit_minutes:
+                print(f"Time limit of {time_limit_minutes} minutes reached during inner loop")
+                break
+                
             if iteration % 1000 == 0:
                 elapsed_time = time.time() - start_time
                 elapsed_minutes = elapsed_time / 60
@@ -70,6 +91,10 @@ def simulated_annealing(problem, T_initial=500, T_min=5, alpha=0.9, inner_limit=
                     elapsed_minutes = elapsed_time / 60
                     print(f"Iteration {iteration} ({elapsed_minutes:.1f} min): Found better solution with cost {best_cost}")
         
+        if (time.time() - start_time) / 60 >= time_limit_minutes:
+            break
+            
+        # Reduce temperature
         old_T = T
         T *= alpha
         
@@ -84,7 +109,11 @@ def simulated_annealing(problem, T_initial=500, T_min=5, alpha=0.9, inner_limit=
     total_minutes = total_time / 60
     
     print(f"\nSimulated annealing completed after {iteration} iterations ({total_minutes:.2f} minutes)")
-    print(f"Completed due to reaching maximum iterations limit ({max_iterations})")
+    
+    if total_minutes >= time_limit_minutes:
+        print(f"Terminated due to reaching time limit of {time_limit_minutes} minutes")
+    else:
+        print(f"Completed due to reaching maximum iterations limit ({max_iterations})")
     
     final_cost, final_supply_cost, final_opening_cost = best_solution.get_total_cost()
     print(f"Final solution cost: {final_cost} = {final_supply_cost} (supply cost) + {final_opening_cost} (opening cost)")
