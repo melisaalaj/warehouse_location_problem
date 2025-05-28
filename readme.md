@@ -174,6 +174,109 @@ The program generates two files:
     Solution saved to: tmp/solution/toy/20250416-182000/solution.txt
    ```
 
+## Initial Solution Strategies
+
+Two initial solution generators are implemented:
+
+### `generate_initial_solution(problem, ordering_operator="random")`
+
+- **Deterministic heuristic** (greedy or demand-based)
+- Ensures:
+  - Total goods taken from any warehouse ≤ its capacity
+  - Each store’s demand is fully satisfied
+  - No warehouse supplies incompatible stores
+
+### `generate_initial_solution_with_randomization(problem, randomization=0.3)`
+
+- Adds **controlled randomness** to increase solution diversity
+- Stores are prioritized using:  
+  `priority = store.demand × average_supply_cost`
+- Warehouses are selected from the **top-K cheapest** using random perturbation
+- Randomness applies to:
+  - Warehouse selection
+  - Quantity assignment  
+- Produces varied, high-quality initial solutions
+
+---
+
+## Neighborhood Moves (Tweaks)
+
+The `Solution.copy_and_perturb()` method applies a **random local change** to explore the solution space. One of the following strategies is selected:
+
+### `Reassign`
+- Completely reassign a store’s demand from scratch
+- Useful for diversifying assignments heavily
+
+### `Transfer`
+- Move a portion of a store’s demand from one warehouse to another
+- Helps explore small incremental cost improvements
+
+### `Split`
+- Divide a store’s demand across multiple warehouses
+- Can help balance load and improve cost
+
+### `Merge`
+- Combine multiple warehouse assignments for a store into one
+- Reduces warehouse usage and may lower fixed costs
+
+> **All tweaks respect:**
+> - Capacity constraints  
+> - Demand satisfaction  
+> - Store incompatibility rules
+
+## Simulated Annealing
+
+This project uses **Simulated Annealing (SA)** as a metaheuristic to iteratively improve the warehouse-location solution by exploring the solution space intelligently.
+<img width="548" alt="image" src="https://github.com/user-attachments/assets/178a55cb-ebe2-473d-88ec-69f406ba5718" />
+
+### Why Simulated Annealing?
+
+Simulated Annealing balances **exploration** and **exploitation**:
+
+- Accepts **worse solutions** early on to escape local minima.
+- Gradually becomes **more selective** as the temperature decreases.
+- Suitable for complex combinatorial optimization problems like this one.
+
+### Algorithm Overview
+
+1. **Initial Solution**  
+   Begins with a feasible solution generated using:
+   - `generate_initial_solution` or  
+   - `generate_initial_solution_with_randomization`
+
+2. **Temperature Schedule**
+   - Starts at `T_initial`
+   - Gradually cools down with factor `alpha`
+   - Stops when reaching `T_min` or time/iteration limits
+
+3. **Inner Loop**
+   For each temperature:
+   - Generate a **neighbor solution** using `Solution.copy_and_perturb()`
+   - Validate the new solution
+   - Accept if:
+     - It has **lower cost**
+     - Or, with probability `exp(-Δcost / T)` if it’s worse
+
+4. **Update Best Solution**
+   - Tracks and updates the best valid solution found
+   - Records cost progression over time
+
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/b3f62582-6af4-4176-a73b-292742dea47f" />
+
+
+### Parameters
+
+| Parameter       | Description                                      |
+|----------------|--------------------------------------------------|
+| `T_initial`     | Initial temperature (default: 500)               |
+| `T_min`         | Minimum temperature to reset from (default: 5)   |
+| `alpha`         | Cooling rate (e.g., 0.9 for 10% reduction)       |
+| `inner_limit`   | Number of iterations per temperature level       |
+| `max_iterations`| Overall iteration limit (default: 50,000)        |
+| `time_limit_minutes` | Execution time cap (default: 15 mins)       |
+
+Listed here are the results of 3 runs: https://docs.google.com/spreadsheets/d/1851_3L6803wNDPyTEpld6INGKz5fg8dPto6rfVb8tOc/edit?usp=sharing
+
 ## License
 
 This project is open-source and available under the [MIT License](LICENSE).
