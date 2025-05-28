@@ -19,18 +19,17 @@ def generate_initial_solution(problem, ordering_operator="random"):
     warehouse_stores = {wh_id: set() for wh_id in range(len(warehouses))}
 
     store_ids = list(range(len(stores)))
+    warehouse_ids = list(range(len(warehouses)))  # Define this early
 
     if ordering_operator == "demand":
         store_ids = order_stores_by_demand(stores)
-    elif ordering_operator == "cost_efficiency":
-        store_ids = list(range(len(stores)))  
     elif ordering_operator == "random":
-        warehouse_ids = list(range(len(warehouses)))
         if len(warehouse_ids) > 1:
             wh1, wh2 = random.sample(warehouse_ids, 2)
             warehouses[wh1], warehouses[wh2] = warehouses[wh2], warehouses[wh1]
-    else:
+    elif ordering_operator != "cost_efficiency":
         raise ValueError("Invalid ordering operator. Choose 'demand', 'cost_efficiency', or 'random'.")
+
 
     for store_id in store_ids:
         store = stores[store_id]
