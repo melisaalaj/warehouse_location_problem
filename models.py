@@ -16,6 +16,7 @@ class Warehouse:
     
     def get_remaining_capacity(self):
         return self.capacity - self.current_usage
+    # gg
 
 class Store:
     def __init__(self, id, demand):
