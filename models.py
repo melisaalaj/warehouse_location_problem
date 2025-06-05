@@ -8,7 +8,7 @@ class Warehouse:
     
     def open(self):
         self.is_open = True
-    
+    # dd
     def add_usage(self, quantity):
         self.current_usage += quantity
         if self.current_usage > 0:
